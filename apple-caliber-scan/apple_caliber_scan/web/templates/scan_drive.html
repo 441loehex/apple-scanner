@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Dołącz skan{% endblock %}
+{% block content %}
+<h2 class="section-header">Dołącz skan — Partia #{{ batch.id }}</h2>
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if batch.variety == "TEST - Polycam" %}
+<div class="alert mb-3" style="background:#e8f5e9;border-left:4px solid #1a5c2e;">
+  <strong>Instrukcja eksportu Polycam (iPhone 17 Pro)</strong>
+  <ol class="mb-0 mt-2">
+    <li>Po zakończeniu skanu w Polycam otwórz projekt i kliknij <strong>Export</strong>.</li>
+    <li>Wybierz format <strong>PLY</strong> (Point Cloud — sekcja Raw Data).</li>
+    <li>Prześlij plik na <strong>Google Drive</strong> i ustaw udostępnianie: <em>Każdy z linkiem może wyświetlać</em>.</li>
+    <li>Skopiuj link i wklej poniżej.</li>
+  </ol>
+</div>
+{% else %}
+<p class="text-muted mb-3">
+  Wgraj plik .ply lub .obj na Google Drive, ustaw udostępnianie "Każdy z linkiem",
+  a następnie wklej link poniżej.
+</p>
+{% endif %}
+
+<div class="card p-4 shadow-sm bg-white">
+  <form method="post" action="/batches/{{ batch.id }}/scan">
+    <div class="mb-3">
+      <label class="form-label fw-bold">Link Google Drive do pliku skanowania</label>
+      <input type="url" name="drive_url" class="form-control" required
+             placeholder="https://drive.google.com/file/d/...">
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-bold">Format pliku</label>
+      <select name="format" class="form-select">
+        <option value="ply" selected>PLY (zalecany — Polycam / Scaniverse)</option>
+        <option value="obj">OBJ</option>
+        <option value="glb">GLB</option>
+        <option value="usdz">USDZ (metadane tylko)</option>
+        <option value="las">LAS (metadane tylko)</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-bold">Rozmiar pierścienia kalibracyjnego (mm)</label>
+      <input type="number" name="ring_mm" class="form-control" step="0.5" min="10" max="200"
+             value="75" placeholder="75">
+      <div class="form-text">Domyślnie 75 mm. Zmień tylko jeśli używasz innego pierścienia.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn" style="background:#1a5c2e;color:#fff;">
+        Pobierz i przetwórz skan
+      </button>
+      <a href="/batches/{{ batch.id }}" class="btn btn-outline-secondary">Anuluj</a>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4 shadow-sm bg-white mt-4">
+  <div class="border-bottom pb-3 mb-4">
+    <h5 class="fw-bold text-muted">LUB: Prześlij plik lokalny</h5>
+  </div>
+  <form method="post" action="/batches/{{ batch.id }}/scan/upload"
+        enctype="multipart/form-data" class="space-y-4">
+    <div class="mb-3">
+      <label class="form-label fw-bold">Plik ZIP (Polycam Raw) lub PLY / OBJ / GLB</label>
+      <input type="file" name="file" accept=".zip,.ply,.obj,.glb"
+             required class="form-control" />
+      <div class="form-text">
+        Polycam: Eksport → Raw → Pobierz ZIP. Następnie prześlij tutaj.
+        Scaniverse: Eksport jako PLY lub OBJ i prześlij bezpośrednio.
+      </div>
+    </div>
+    <input type="hidden" name="ring_mm_str" value="{{ batch.calibration_ring_mm | default(75) }}" />
+    <button type="submit" class="btn" style="background:#2e7d32;color:#fff;">
+      Prześlij i przetwórz
+    </button>
+  </form>
+</div>
+{% endblock %}

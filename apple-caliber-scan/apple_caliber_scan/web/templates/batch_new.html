@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Nowa partia{% endblock %}
+{% block content %}
+<h2 class="section-header">Nowa partia jabłek</h2>
+{% if preset and preset.variety == "TEST - Polycam" %}
+<div class="alert mb-3" style="background:#e8f5e9;border-left:4px solid #1a5c2e;">
+  <strong>Tryb: Test terenowy Polycam</strong> — formularz wypełniony wstępnie dla 30 jabłek z pierścieniem 75mm.
+  Zmodyfikuj w razie potrzeby, a następnie kliknij "Utwórz partię".
+</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post" action="/batches" class="card p-4 shadow-sm bg-white">
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Sprzedawca *</label>
+      <input type="text" name="seller_name" class="form-control" required
+             placeholder="Jan Kowalski" value="{{ preset.seller_name if preset else '' }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Adres sprzedawcy</label>
+      <input type="text" name="seller_address" class="form-control"
+             placeholder="ul. Sadowa 12, Skierniewice" value="{{ preset.seller_address if preset else '' }}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Odmiana *</label>
+      <input type="text" name="variety" id="variety" class="form-control" list="varieties-list" required
+             placeholder="Jonagold" value="{{ preset.variety if preset else '' }}">
+      <datalist id="varieties-list">
+        {% for v in varieties %}<option value="{{ v }}">{% endfor %}
+      </datalist>
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Cena (PLN/kg)</label>
+      <input type="number" name="price_pln_per_kg" class="form-control" step="0.01" min="0"
+             placeholder="1.85" value="{{ preset.price_pln_per_kg if preset and preset.price_pln_per_kg else '' }}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Data otwarcia CA</label>
+      <input type="date" name="ca_opening_date" class="form-control"
+             value="{{ preset.ca_opening_date if preset else '' }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-bold">Numer partii / referencja</label>
+      <input type="text" name="operator_batch_id" class="form-control"
+             placeholder="PART-2026-001" value="{{ preset.operator_batch_id if preset else '' }}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label fw-bold">Liczba skrzynek</label>
+      <input type="number" name="number_of_crates" class="form-control" min="1" id="crates-input"
+             value="{{ preset.number_of_crates if preset else 1 }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label fw-bold">Łączna masa (kg)</label>
+      <input type="number" name="total_weight_kg" class="form-control" step="0.1" id="weight-input"
+             value="{{ preset.total_weight_kg if preset and preset.total_weight_kg is not none else default_weight }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label fw-bold">Uwagi</label>
+      <input type="text" name="notes" class="form-control"
+             placeholder="Opcjonalne uwagi" value="{{ preset.notes if preset else '' }}">
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn" style="background:#1a5c2e;color:#fff;">Utwórz partię</button>
+    <a href="/" class="btn btn-outline-secondary">Anuluj</a>
+  </div>
+</form>
+<script>
+document.getElementById('crates-input').addEventListener('input', function() {
+  const w = document.getElementById('weight-input');
+  w.value = (parseInt(this.value || 1) * {{ default_weight }}).toFixed(1);
+});
+</script>
+{% endblock %}

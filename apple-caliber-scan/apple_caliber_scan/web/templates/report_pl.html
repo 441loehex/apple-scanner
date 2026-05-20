@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ report_title }} — {{ company_name }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 11px; color: #222; background: #fff; }
+  .header { background: #1a5c2e; color: #fff; padding: 16px 24px; text-align: center; }
+  .header h1 { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; }
+  .header h2 { font-size: 13px; font-weight: normal; letter-spacing: 0.5px; opacity: 0.9; }
+  .container { padding: 20px 24px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .meta-block { background: #f8f8f8; border: 1px solid #ddd; border-radius: 4px; padding: 12px; }
+  .meta-block h3 { font-size: 11px; font-weight: bold; color: #1a5c2e; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  .meta-row { display: flex; margin-bottom: 4px; }
+  .meta-label { font-weight: bold; width: 160px; flex-shrink: 0; color: #444; }
+  .meta-value { flex: 1; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { background: #1a5c2e; color: #fff; padding: 7px 8px; text-align: left; font-size: 10px; }
+  td { padding: 6px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
+  tr:last-child td { border-bottom: none; }
+  tr.total-row td { background: #f0f5f0; font-weight: bold; border-top: 2px solid #1a5c2e; }
+  tr.class-75plus td { background: #e8f4ea; }
+  .section-title { font-size: 13px; font-weight: bold; color: #1a5c2e; margin: 16px 0 8px; border-bottom: 2px solid #1a5c2e; padding-bottom: 4px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: bold; margin: 8px 0; }
+  .badge-green { background: #1a5c2e; color: #fff; }
+  .badge-yellow { background: #f0b429; color: #333; }
+  .badge-red { background: #c0392b; color: #fff; }
+  .above-75-block { text-align: center; padding: 12px; background: #f8f8f8; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 16px; }
+  .above-75-block .label { font-size: 12px; color: #444; margin-bottom: 4px; }
+  .warning-box { background: #fff3cd; border: 1px solid #f0b429; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; font-size: 10px; }
+  .warning-box .icon { font-weight: bold; }
+  .info-box { background: #e8f4ea; border: 1px solid #1a5c2e; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; font-size: 10px; }
+  .calib-block { background: #f8f8f8; border: 1px solid #ddd; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 10px; }
+  .legal-block { margin-top: 24px; background: #f5f5f5; border: 1px solid #ccc; border-radius: 4px; padding: 14px; font-size: 9px; color: #555; white-space: pre-line; line-height: 1.6; }
+  .legal-block .legal-title { font-weight: bold; font-size: 10px; color: #333; margin-bottom: 8px; display: block; }
+  .szacunek-label { background: #f0b429; color: #333; font-size: 9px; font-weight: bold; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+  .sideways-note { font-size: 10px; color: #555; background: #f0f4ff; border: 1px solid #b0c4de; border-radius: 4px; padding: 6px 12px; margin-bottom: 12px; }
+  .gt-table th { background: #2c5f8a; }
+  .deviation-pos { color: #1a5c2e; }
+  .deviation-neg { color: #c0392b; }
+  @media print {
+    .container { padding: 10px; }
+    .header { padding: 10px 16px; }
+    body { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>{{ company_name }}</h1>
+  <h2>{{ report_title }}</h2>
+</div>
+
+<div class="container">
+
+  <!-- Metadata block -->
+  <div class="meta-grid">
+    <div class="meta-block">
+      <h3>Dane partii</h3>
+      <div class="meta-row"><span class="meta-label">Sprzedawca:</span><span class="meta-value">{{ batch.seller_name }}</span></div>
+      <div class="meta-row"><span class="meta-label">Adres:</span><span class="meta-value">{{ batch.seller_address or '—' }}</span></div>
+      <div class="meta-row"><span class="meta-label">Odmiana:</span><span class="meta-value">{{ batch.variety }}</span></div>
+      <div class="meta-row"><span class="meta-label">Cena:</span><span class="meta-value">{% if batch.price_pln_per_kg %}{{ batch.price_pln_per_kg }} PLN/kg{% else %}—{% endif %}</span></div>
+      <div class="meta-row"><span class="meta-label">Data otwarcia CA:</span><span class="meta-value">{{ batch.ca_opening_date or '—' }}</span></div>
+      <div class="meta-row"><span class="meta-label">Numer partii:</span><span class="meta-value">{{ batch.operator_batch_id or '—' }}</span></div>
+      <div class="meta-row"><span class="meta-label">Uwagi:</span><span class="meta-value">{{ batch.notes or '—' }}</span></div>
+    </div>
+    <div class="meta-block">
+      <h3>Parametry logistyczne</h3>
+      <div class="meta-row"><span class="meta-label">Liczba skrzynek:</span><span class="meta-value">{{ batch.number_of_crates }}</span></div>
+      <div class="meta-row"><span class="meta-label">Łączna masa:</span><span class="meta-value">{{ batch.total_weight_kg }} kg</span></div>
+      <div class="meta-row"><span class="meta-label">Data raportu:</span><span class="meta-value">{{ generated_at }}</span></div>
+    </div>
+  </div>
+
+  <!-- Calibration block -->
+  <div class="calib-block">
+    <strong>Kalibracja:</strong>
+    {% if scan %}
+      Pierścień pomiarowy {{ scan.calibration_ring_mm or 75.0 }} mm
+      {% if scale_factor %}| Współczynnik skali: <strong>{{ "%.4f"|format(scale_factor) }} mm/px</strong>{% endif %}
+      | Pewność kalibracji: <strong>{{ calibration_confidence }}</strong>
+    {% else %}
+      Brak danych skanowania
+    {% endif %}
+  </div>
+  {% if calibration_warning %}
+  <div class="warning-box">
+    <span class="icon">⚠</span> {{ calibration_warning }}
+  </div>
+  {% endif %}
+
+  <!-- Main results: visible top layer -->
+  <div class="section-title">Wynik pomiaru warstwy wierzchniej</div>
+
+  <div class="above-75-block">
+    <div class="label">Udział jabłek ≥ 75 mm (warstwa wierzchnia)</div>
+    <span class="badge {{ badge_class }}">{{ above_75_share }}%</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Klasa kalibrażu</th>
+        <th>Sztuki</th>
+        <th>%</th>
+        <th>Szac. masa (kg)</th>
+        <th>% masy</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for est in class_estimates %}
+      <tr {% if est.label in ['75-80','80-85','85-90','90+'] %}class="class-75plus"{% endif %}>
+        <td>{{ est.label }} mm</td>
+        <td>{{ est.count }}</td>
+        <td>{{ "%.1f"|format(est.pct) }}%</td>
+        <td>{{ est.weight_kg }}</td>
+        <td>{{ est.weight_pct }}%</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td>RAZEM (warstwa wierzchnia)</td>
+        <td>{{ distribution.total }}</td>
+        <td>100%</td>
+        <td>{{ batch.total_weight_kg }}</td>
+        <td>100%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if sideways_count > 0 %}
+  <p class="sideways-note">
+    Jabłka leżące na boku (wykryte): <strong>{{ sideways_count }}</strong> szt.
+    (kaliber = oś mniejsza elipsy)
+  </p>
+  {% endif %}
+
+  {% if orientation_counts %}
+  <p class="sideways-note">
+    Orientacja jabłek:
+    pionowo <strong>{{ orientation_counts.get('upright', 0) }}</strong> szt. ·
+    na boku <strong>{{ orientation_counts.get('sideways', 0) }}</strong> szt. ·
+    ukośnie <strong>{{ orientation_counts.get('angled', 0) }}</strong> szt.
+    {% if orientation_counts.get('angled', 0) > 0 %}
+    — <em>jabłka ukośne mogą mieć niedoszacowany kaliber</em>
+    {% endif %}
+  </p>
+  {% endif %}
+
+  <!-- Full-batch projection -->
+  <div class="section-title">
+    Projekcja pełnej partii
+    <span class="szacunek-label">SZACUNEK</span>
+  </div>
+
+  {% if projection_ok %}
+  <div class="info-box">
+    Podstawa: rozkład warstwy wierzchniej × łączna masa {{ batch.total_weight_kg }} kg
+    | Pewność: <strong>{{ batch_confidence.value }}</strong>
+    — {% if has_ground_truth %}sparowane dane z sortownicy dostępne{% else %}brak sparowanych danych z sortownicy{% endif %}
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Klasa kalibrażu</th>
+        <th>Szacowana masa (kg) <span class="szacunek-label">SZACUNEK</span></th>
+        <th>% masy</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for est in class_estimates %}
+      <tr {% if est.label in ['75-80','80-85','85-90','90+'] %}class="class-75plus"{% endif %}>
+        <td>{{ est.label }} mm</td>
+        <td>{{ est.weight_kg }}</td>
+        <td>{{ est.weight_pct }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="warning-box">
+    <span class="icon">⚠</span>
+    Dane te są szacunkiem statystycznym. Nie stanowią pomiaru mechanicznego.
+    Szacunkowa masa (heurystyczna) — model geometryczny, nie pomiar wagowy.
+  </div>
+  {% else %}
+  <div class="warning-box">
+    <span class="icon">⚠</span>
+    Projekcja pełnej partii niedostępna — kalibracja niskiej pewności lub brak kalibracji.
+  </div>
+  {% endif %}
+
+  <!-- Ground truth comparison -->
+  {% if has_ground_truth and ground_truth_rows %}
+  <div class="section-title">Porównanie z danymi sortownicy</div>
+  <table class="gt-table">
+    <thead>
+      <tr>
+        <th>Klasa</th>
+        <th>Wynik skanowania (%)</th>
+        <th>Wynik sortownicy (%)</th>
+        <th>Odchylenie (pp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in ground_truth_rows %}
+      <tr>
+        <td>{{ row.label }} mm</td>
+        <td>{{ row.scan_pct }}%</td>
+        <td>{{ row.grader_pct }}%</td>
+        <td class="{% if row.deviation_pp >= 0 %}deviation-pos{% else %}deviation-neg{% endif %}">
+          {{ '+' if row.deviation_pp >= 0 else '' }}{{ row.deviation_pp }} pp
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Legal clause -->
+  <div class="legal-block">
+    <span class="legal-title">KLAUZULA OGRANICZENIA ODPOWIEDZIALNOŚCI</span>
+    <span>Niniejszy raport ma charakter wyłącznie analityczny i szacunkowy. Wyniki opierają się
+na analizie widocznej górnej warstwy skrzyni jabłek przy użyciu skanowania LiDAR i nie
+stanowią pomiaru certyfikowanego, klasyfikacji mechanicznej ani gwarancji jakości,
+ceny, sprzedaży lub zgodności z obowiązującymi normami jakościowymi.
+
+Rozkład kalibrażu całej partii jest szacunkiem statystycznym o niskiej pewności i może
+odbiegać od wyników sortownicy mechanicznej (np. AWETA). Pewność projekcji wzrośnie
+dopiero po zgromadzeniu sparowanych danych pomiarowych z sortownicy dla tej samej
+partii.
+
+Niniejszy raport może być stosowany wyłącznie jako materiał pomocniczy w negocjacjach
+handlowych. Freshora Sp. Z. o. o. nie ponosi odpowiedzialności za decyzje handlowe
+podjęte wyłącznie na podstawie niniejszego raportu.
+
+Freshora Sp. Z. o. o. — dokument wygenerowany automatycznie {{ generated_at }}</span>
+  </div>
+
+</div>
+</body>
+</html>

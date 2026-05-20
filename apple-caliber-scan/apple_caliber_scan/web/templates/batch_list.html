@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Partie{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="section-header mb-0">Lista Partii</h2>
+  <div class="d-flex gap-2">
+    <a href="/batches/new-field-test" class="btn btn-outline-success" title="Utwórz partię testową: 30 jabłek, pierścień 75mm, Polycam">
+      Test Polycam (30szt.)
+    </a>
+    <a href="/batches/new" class="btn" style="background:#1a5c2e;color:#fff;">+ Nowa partia</a>
+  </div>
+</div>
+
+{% if batches %}
+<div class="table-responsive">
+  <table class="table table-hover bg-white shadow-sm">
+    <thead style="background:#1a5c2e;color:#fff;">
+      <tr>
+        <th>#</th>
+        <th>Sprzedawca</th>
+        <th>Odmiana</th>
+        <th>Skrzynki</th>
+        <th>Masa (kg)</th>
+        <th>Status</th>
+        <th>Data</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in batches %}
+      <tr>
+        <td>{{ b.id }}</td>
+        <td><strong>{{ b.seller_name }}</strong><br><small class="text-muted">{{ b.operator_batch_id or '' }}</small></td>
+        <td>{{ b.variety }}</td>
+        <td>{{ b.number_of_crates }}</td>
+        <td>{{ b.total_weight_kg }}</td>
+        <td><span class="badge status-{{ b.status }} rounded-pill" style="background:#1a5c2e">{{ b.status }}</span></td>
+        <td><small>{{ b.created_at[:10] }}</small></td>
+        <td><a href="/batches/{{ b.id }}" class="btn btn-sm btn-outline-secondary">Szczegóły</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+  Brak partii. <a href="/batches/new">Utwórz pierwszą partię.</a>
+</div>
+{% endif %}
+{% endblock %}

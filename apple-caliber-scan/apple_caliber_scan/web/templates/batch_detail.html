@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Partia #{{ batch.id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="section-header mb-0">Partia #{{ batch.id }} — {{ batch.seller_name }}</h2>
+  <a href="/" class="btn btn-outline-secondary btn-sm">← Powrót</a>
+</div>
+
+{% if weight_warning %}
+<div class="alert alert-warning">⚠ {{ weight_warning }}</div>
+{% endif %}
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h5 class="text-success">Dane partii</h5>
+      <table class="table table-sm mb-0">
+        <tr><th>Sprzedawca</th><td>{{ batch.seller_name }}</td></tr>
+        <tr><th>Adres</th><td>{{ batch.seller_address or '—' }}</td></tr>
+        <tr><th>Odmiana</th><td>{{ batch.variety }}</td></tr>
+        <tr><th>Cena</th><td>{% if batch.price_pln_per_kg %}{{ batch.price_pln_per_kg }} PLN/kg{% else %}—{% endif %}</td></tr>
+        <tr><th>Data CA</th><td>{{ batch.ca_opening_date or '—' }}</td></tr>
+        <tr><th>Nr partii</th><td>{{ batch.operator_batch_id or '—' }}</td></tr>
+        <tr><th>Skrzynki</th><td>{{ batch.number_of_crates }}</td></tr>
+        <tr><th>Łączna masa</th><td>{{ batch.total_weight_kg }} kg</td></tr>
+        <tr><th>Status</th><td><span class="badge bg-success">{{ batch.status }}</span></td></tr>
+        <tr><th>Uwagi</th><td>{{ batch.notes or '—' }}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h5 class="text-success">Akcje</h5>
+      <a href="/batches/{{ batch.id }}/scan/new" class="btn mb-2 w-100" style="background:#1a5c2e;color:#fff;">
+        + Dołącz skan (Google Drive)
+      </a>
+      <form method="post" action="/batches/{{ batch.id }}/delete"
+            onsubmit="return confirm('Czy na pewno chcesz usunąć tę partię i wszystkie powiązane dane?')">
+        <button type="submit" class="btn btn-danger w-100">Usuń partię</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<h4 class="section-header">Skany</h4>
+{% if scans %}
+<div class="table-responsive mb-4">
+  <table class="table table-hover bg-white shadow-sm">
+    <thead style="background:#1a5c2e;color:#fff;">
+      <tr><th>#</th><th>Format</th><th>Status</th><th>Kalibracja</th><th>Punkty</th><th>Akcje</th></tr>
+    </thead>
+    <tbody>
+      {% for s in scans %}
+      <tr>
+        <td>{{ s.id }}</td>
+        <td>{{ s.format or '?' }}</td>
+        <td>{{ s.status }}</td>
+        <td>{{ s.calibration_confidence }}</td>
+        <td>{{ s.point_count or '—' }}</td>
+        <td>
+          {% if s.status in ['previewed', 'annotated'] %}
+          <a href="/batches/{{ batch.id }}/scans/{{ s.id }}/review" class="btn btn-sm btn-outline-primary">Przeglądaj</a>
+          {% endif %}
+          {% if s.status == 'annotated' %}
+          <form method="post" action="/batches/{{ batch.id }}/scans/{{ s.id }}/report" style="display:inline">
+            <button type="submit" class="btn btn-sm" style="background:#1a5c2e;color:#fff;">Generuj raport</button>
+          </form>
+          {% endif %}
+          {% if s.drive_url %}
+          <form method="post" action="/batches/{{ batch.id }}/scans/{{ s.id }}/reingest" style="display:inline"
+                onsubmit="return confirm('Ponownie pobrać i przetworzyć skan z Drive? Obecne adnotacje zostaną usunięte.')">
+            <button type="submit" class="btn btn-sm btn-outline-warning">Ponów przetwarzanie</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-info mb-4">Brak skanów. Dołącz skan przez Google Drive.</div>
+{% endif %}
+
+<h4 class="section-header">Raporty</h4>
+{% if reports %}
+<div class="list-group mb-4">
+  {% for r in reports %}
+  <div class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+      <strong>Raport #{{ r.id }}</strong>
+      <small class="text-muted ms-2">{{ r.generated_at[:16] }}</small>
+    </div>
+    <div class="btn-group">
+      {% if r.html_path %}<a href="/reports/{{ r.id }}.html" class="btn btn-sm btn-outline-secondary" target="_blank">HTML</a>{% endif %}
+      {% if r.pdf_path %}<a href="/reports/{{ r.id }}.pdf" class="btn btn-sm btn-outline-danger" target="_blank">PDF</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">Brak raportów.</div>
+{% endif %}
+{% endblock %}

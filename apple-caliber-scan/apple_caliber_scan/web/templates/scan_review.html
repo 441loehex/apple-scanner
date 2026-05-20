@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Przegląd skanu #{{ scan.id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="section-header mb-0">Adnotacja skanu #{{ scan.id }} — Partia #{{ batch.id }}</h2>
+  <a href="/batches/{{ batch.id }}" class="btn btn-outline-secondary btn-sm">← Partia</a>
+</div>
+
+<div class="alert alert-info">
+  <strong>Instrukcja:</strong>
+  Kliknij okrąg, aby oznaczyć jako pierścień kalibracyjny, jabłko lub wykluczyć.
+  Przeciągnij krawędź, aby zmienić rozmiar. Dwukrotne kliknięcie pustego obszaru dodaje nowy okrąg.
+</div>
+
+{% if auto_ring_json %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  <strong>Pierścień kalibracyjny wykryty automatycznie</strong>
+  (pewność: {{ "%.0f"|format(auto_ring_json.confidence * 100) }}%).
+  Sprawdź poprawność zaznaczenia przed zatwierdzeniem.
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card p-2">
+      <div style="position:relative;display:inline-block;width:100%;">
+        <canvas id="image-layer" style="display:block;width:100%;border:1px solid #ccc;"></canvas>
+        <canvas id="review-canvas" style="position:absolute;top:0;left:0;width:100%;background:transparent;cursor:crosshair;border:1px solid transparent;"></canvas>
+      </div>
+    </div>
+    <!-- Preview controls -->
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-2 mb-2 px-1">
+      <label class="d-flex align-items-center gap-2 text-muted small">
+        Jasność
+        <input type="range" id="brightness-slider" min="50" max="300" value="100" style="width:100px;" />
+        <span id="brightness-val" style="min-width:36px;">100%</span>
+      </label>
+      <label class="d-flex align-items-center gap-2 text-muted small">
+        Kontrast
+        <input type="range" id="contrast-slider" min="50" max="300" value="100" style="width:100px;" />
+        <span id="contrast-val" style="min-width:36px;">100%</span>
+      </label>
+      <button id="ring-highlight-btn" class="btn btn-sm btn-outline-primary">
+        Podświetl pierścień (niebieski)
+      </button>
+      <button id="reset-view-btn" class="btn btn-sm btn-outline-secondary">
+        Resetuj widok
+      </button>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3 mb-3">
+      <h6 class="fw-bold" style="color:#1a5c2e;">Kalibracja</h6>
+      <div>Pierścień: <strong>{{ ring_mm }} mm</strong></div>
+      <div>Współczynnik: <span id="scale-display">—</span> mm/px</div>
+      <div>Pewność: <span id="confidence-display">—</span></div>
+      <div id="calib-warning" class="text-warning small mt-1"></div>
+    </div>
+    <div class="card p-3 mb-3">
+      <h6 class="fw-bold" style="color:#1a5c2e;">Rozkład kalibrażu (warstwa wierzchnia)</h6>
+      <table class="table table-sm mb-0" id="dist-table">
+        <thead><tr><th>Klasa</th><th>Szt.</th><th>%</th></tr></thead>
+        <tbody id="dist-body"></tbody>
+      </table>
+      <div class="mt-2"><strong>≥75 mm: <span id="above75-display">—</span></strong></div>
+    </div>
+    <div class="card p-3">
+      <h6 class="fw-bold" style="color:#1a5c2e;">Legenda</h6>
+      <div><span style="color:blue">●</span> Auto-wykryty</div>
+      <div><span style="color:red">●</span> Pierścień kalibracyjny</div>
+      <div><span style="color:#1a5c2e">●</span> Jabłko potwierdzone</div>
+      <div><span style="color:#aaa">●</span> Wykluczony</div>
+      <hr>
+      <button id="save-btn" class="btn w-100 mt-2" style="background:#1a5c2e;color:#fff;">
+        Zapisz adnotację i generuj raport
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popover for circle actions -->
+<div id="circle-popover" style="display:none;position:absolute;background:#fff;border:1px solid #ccc;border-radius:6px;padding:8px;z-index:1000;box-shadow:2px 2px 8px rgba(0,0,0,0.2);">
+  <div style="font-weight:bold;margin-bottom:6px;font-size:12px;">Oznacz jako:</div>
+  <button class="btn btn-sm btn-outline-danger mb-1 w-100" onclick="markCircle('ring')">Pierścień kalibracyjny</button>
+  <button class="btn btn-sm mb-1 w-100" style="background:#1a5c2e;color:#fff;" onclick="markCircle('apple')">Jabłko</button>
+  <button class="btn btn-sm btn-outline-secondary w-100" onclick="markCircle('exclude')">Wyklucz</button>
+</div>
+
+<script>
+const CIRCLES_DATA = {{ circles_json | safe }};
+const PREVIEW_URL = "{{ preview_url or '' }}";
+const RING_MM = {{ ring_mm }};
+const SCAN_ID = {{ scan.id }};
+const BATCH_ID = {{ batch.id }};
+const ANNOTATE_URL = "/batches/" + BATCH_ID + "/scans/" + SCAN_ID + "/annotate";
+const REPORT_URL = "/batches/" + BATCH_ID + "/scans/" + SCAN_ID + "/report";
+const AUTO_RING = {{ auto_ring_json | tojson | safe }};
+</script>
+<script src="/static/review.js"></script>
+{% endblock %}
