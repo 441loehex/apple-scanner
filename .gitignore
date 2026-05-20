@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+*.env.local
+
+# Data and generated files
+apple-caliber-scan/data/
+apple-caliber-scan/sample-output/
+*.db
+*.db-shm
+*.db-wal
+
+# Large archives
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# Testing / tooling cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local settings (personal)
+.claude/settings.local.json
+
+# Generated knowledge graph output
+graphify-out/
